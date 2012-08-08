@@ -52,7 +52,7 @@ CPLErr GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRasterBand *green, GD
 
 	red->RasterIO(GF_Read, 0, 0, nXSize, nYSize, paRedLayer, nWidth, nHeight, eRedType, 0, 0);
 	green->RasterIO(GF_Read, 0, 0, nXSize, nYSize, paGreenLayer, nWidth, nHeight, eGreenType, 0, 0);
-	blue->RasterIO(GF_Read, 0, 0, nXSize, nYSize, paBlueLayer, nWidth, nHeight, eRedType, 0, 0);
+	blue->RasterIO(GF_Read, 0, 0, nXSize, nYSize, paBlueLayer, nWidth, nHeight, eBlueType, 0, 0);
 
 	for (int row = 0; row < nHeight; row++)
 		for (int col = 0; col < nWidth; col++)
@@ -64,7 +64,6 @@ CPLErr GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRasterBand *green, GD
 			//Compute luminosity value
 			padfImg[row][col] = dfRedVal * forRed + dfGreenVal * forGreen + dfBlueVal * forBlue;
 		}
-
 
 	return CE_None;
 }
@@ -95,6 +94,8 @@ int main(int argc, char* argv[])
 
 	GDALConvertRGBToLuminosity(poRstRedBand, poRstGreenBand, poRstBlueBand, nWidth, nHeight,
 			padfImg, nHeight, nWidth);
+
+	cout << poRstRedBand->GetMaximum();
 
 	/*
 	double dfRedVal_0 = SRCVAL(paLayer, eType, 0);
