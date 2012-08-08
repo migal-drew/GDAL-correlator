@@ -62,8 +62,9 @@ CPLErr GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRasterBand *green, GD
 			double dfGreenVal = SRCVAL(paGreenLayer, eGreenType, nWidth * row + col * dataGreenSize);
 			double dfBlueVal = SRCVAL(paBlueLayer, eBlueType, nWidth * row + col * dataBlueSize);
 			//Compute luminosity value
-			padfImg[row][col] = dfRedVal * forGreen + dfGreenVal * forGreen + dfBlueVal * forBlue;
+			padfImg[row][col] = dfRedVal * forRed + dfGreenVal * forGreen + dfBlueVal * forBlue;
 		}
+
 
 	return CE_None;
 }
@@ -76,7 +77,7 @@ int main(int argc, char* argv[])
 
     GDALDataset  *poDataset;
 
-    poDataset = (GDALDataset *) GDALOpen( "/home/andrew/workspace/GDAL-correlator/Debug/test.jpg", GA_ReadOnly );
+    poDataset = (GDALDataset *) GDALOpen( "/home/andrew/workspace/GDAL-correlator/Debug/lenna.jpg", GA_ReadOnly );
 	if( poDataset == NULL )
        return 0;
 
@@ -84,9 +85,16 @@ int main(int argc, char* argv[])
 	GDALRasterBand *poRstGreenBand = poDataset->GetRasterBand(2);
 	GDALRasterBand *poRstBlueBand = poDataset->GetRasterBand(3);
 
-	int nWidth =
+	int nWidth = 512;
+	int nHeight = 512;
+	double **padfImg = NULL;
 
-	GDALConvertRGBToLuminosity(poRstRedBand, poRstGreenBand, poRstBlueBand, )
+	padfImg = new double*[nHeight];
+	for (int i = 0; i < nHeight; i++)
+		padfImg[i] = new double[nWidth];
+
+	GDALConvertRGBToLuminosity(poRstRedBand, poRstGreenBand, poRstBlueBand, nWidth, nHeight,
+			padfImg, nHeight, nWidth);
 
 	/*
 	double dfRedVal_0 = SRCVAL(paLayer, eType, 0);
