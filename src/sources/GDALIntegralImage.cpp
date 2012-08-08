@@ -22,6 +22,7 @@ void GDALIntegralImage::Initialize(double **padfImg, int nHeight, int nWidth)
 	this->nHeight = nHeight;
 	this->nWidth = nWidth;
 
+	//Integral image calculation
 	for (int i = 0; i < nHeight; i++)
 		for (int j = 0; j < nWidth; j++)
 		{
@@ -100,6 +101,10 @@ double GDALIntegralImage::HaarWavelet_Y(int nRow, int nCol, int nSize)
 
 GDALIntegralImage::~GDALIntegralImage()
 {
+	//Clean up memory
+	for (int i = 0; i < nHeight; i++)
+		delete[] pMatrix[i];
 
+	delete[] pMatrix;
 }
 
