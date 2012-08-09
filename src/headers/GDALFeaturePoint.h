@@ -5,15 +5,19 @@ class GDALFeaturePoint
 {
 public:
 	GDALFeaturePoint();
+	GDALFeaturePoint(const GDALFeaturePoint& fp);
 	GDALFeaturePoint(int nX, int nY, int nScale, int nRadius, int nSign);
 	virtual ~GDALFeaturePoint();
 
-	//Descriptor length
-	static const int DESC_SIZE = 64;
+	GDALFeaturePoint& operator=(const GDALFeaturePoint& point);
+
 	//Access to descriptor
 	double& operator[](int i);
 
-	int  GetX();
+	//Descriptor length
+	static const int DESC_SIZE = 64;
+
+	int GetX();
 	void SetX(int nX);
 
 	int  GetY();

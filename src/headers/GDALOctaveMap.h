@@ -1,6 +1,9 @@
 #ifndef GDALOCTAVEMAP_H_
 #define GDALOCTAVEMAP_H_
 
+#include "GDALIntegralImage.h"
+#include "GDALOctaveLayer.h"
+
 class GDALOctaveMap
 {
 public:

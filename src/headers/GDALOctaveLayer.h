@@ -1,6 +1,7 @@
 #ifndef GDALOCTAVELAYER_H_
 #define GDALOCTAVELAYER_H_
 
+#include "GDALIntegralImage.h"
 #include <math.h>
 
 class GDALOctaveLayer
