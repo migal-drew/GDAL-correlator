@@ -7,10 +7,10 @@ class GDALOctaveLayer
 {
 public:
 	GDALOctaveLayer();
-	GDALOctaveLayer(int nOctave, int nInterval, int nImgWidth, int nImgHeight);
+	GDALOctaveLayer(int nOctave, int nInterval);
 	virtual ~GDALOctaveLayer();
 
-	void computeLayer(GDALIntegralImage *poImg);
+	void ComputeLayer(GDALIntegralImage *poImg);
 
     //Octave which contains this layer (1,2,3...)
     int octaveNum;

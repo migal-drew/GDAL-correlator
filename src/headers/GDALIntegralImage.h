@@ -13,6 +13,9 @@ public:
 	double HaarWavelet_X(int nRow, int nCol, int nSize);
 	double HaarWavelet_Y(int nRow, int nCol, int nSize);
 
+	int GetHeight();
+	int GetWidth();
+
 private:
 	double **pMatrix;
 	int nWidth;

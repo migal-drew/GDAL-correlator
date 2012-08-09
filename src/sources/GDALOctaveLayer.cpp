@@ -13,14 +13,14 @@ GDALOctaveLayer::GDALOctaveLayer()
 	this->signs =       0;
 }
 
-GDALOctaveLayer::GDALOctaveLayer(int nOctave, int nInterval, int nImgWidth, int nImgHeight)
+GDALOctaveLayer::GDALOctaveLayer(int nOctave, int nInterval)
 {
 	this->octaveNum = nOctave;
 	this->filterSize = 3 * ((int)pow(2, nOctave) * nInterval + 1);
 	this->radius = (this->filterSize - 1) / 2;
 	this->scale = (int)pow(2, nOctave);
-	this->width = nImgWidth;
-	this->height = nImgHeight;
+	this->width = 0;
+	this->height = 0;
 
 	//Allocate memory for arrays
 	this->detHessians = new double*[this->height];
@@ -33,8 +33,22 @@ GDALOctaveLayer::GDALOctaveLayer(int nOctave, int nInterval, int nImgWidth, int 
 	}
 }
 
-void GDALOctaveLayer::computeLayer(GDALIntegralImage *poImg)
+void GDALOctaveLayer::ComputeLayer(GDALIntegralImage *poImg)
 {
+	this->width = poImg->GetWidth();
+	this->height = poImg->GetHeight();
+
+	//Allocate memory for arrays
+	this->detHessians = new double*[this->height];
+	this->signs = new int*[this->height];
+
+	for (int i = 0; i < this->width; i++)
+	{
+		this->detHessians[i] = new double[this->width];
+		this->signs[i] = new int[this->width];
+	}
+	//End Allocate memory for arrays
+
 	//Values of Fast Hessian filters
 	double dxx, dyy, dxy;
 	// 1/3 of filter side
@@ -45,13 +59,10 @@ void GDALOctaveLayer::computeLayer(GDALIntegralImage *poImg)
 
 	int normalization = filterSize * filterSize;
 
-	int imgHeight = height;
-	int imgWidth = width;
-
 	//Loop over image pixels
 	//Filter should remain into image borders
-	for (int r = radius; r <= imgHeight - radius; r++)
-		for (int c = radius; c <= imgWidth - radius; c++)
+	for (int r = radius; r <= height - radius; r++)
+		for (int c = radius; c <= width - radius; c++)
 		{
 			dxx = poImg->GetRectangleSum(r - lobe + 1, c - radius, filterSize, longPart)
 				- 3 * poImg->GetRectangleSum(r - lobe + 1, c - (lobe - 1) / 2, lobe, longPart);
