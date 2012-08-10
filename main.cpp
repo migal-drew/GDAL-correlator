@@ -1,6 +1,9 @@
 #include "gdal.h"
 #include "gdal_priv.h"
 #include "cpl_conv.h"
+#include "cpl_vsi.h"
+
+#define CPLFree VSIFree
 
 #include <iostream>
 
@@ -64,6 +67,10 @@ CPLErr GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRasterBand *green, GD
 			//Compute luminosity value
 			padfImg[row][col] = dfRedVal * forRed + dfGreenVal * forGreen + dfBlueVal * forBlue;
 		}
+
+	CPLFree(paRedLayer);
+	CPLFree(paGreenLayer);
+	CPLFree(paBlueLayer);
 
 	return CE_None;
 }

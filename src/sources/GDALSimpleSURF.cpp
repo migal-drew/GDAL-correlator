@@ -34,15 +34,28 @@ void GDALSimpleSURF::ExtractFeaturePoints(GDALIntegralImage *poImg,
 }
 
 double GDALSimpleSURF::GetEuclideanDistance(
-		GDALFeaturePoint *poPoint_1, GDALFeaturePoint *poPoint_2)
+		GDALFeaturePoint &poPoint_1, GDALFeaturePoint &poPoint_2)
 {
 	double sum = 0;
 
 	for (int i = 0; i < GDALFeaturePoint::DESC_SIZE; i++)
-		sum += ((*poPoint_1)[i] - (*poPoint_2)[i])
-			* ((*poPoint_1)[i] - (*poPoint_2)[i]);
+		sum += (poPoint_1[i] - poPoint_2[i]) * (poPoint_1[i] - poPoint_2[i]);
 
 	return sqrt(sum);
+}
+
+void GDALSimpleSURF::NormalizeDistances(list<MatchedPointPairInfo> *poList)
+{
+	double max = 0;
+
+	list<MatchedPointPairInfo>::iterator i;
+	for (i = poList->begin(); i != poList->end(); i++)
+		if ((*i).euclideanDist > max)
+			max = (*i).euclideanDist;
+
+	//Normalize distances to one
+	for (i = poList->begin(); i != poList->end(); i++)
+		(*i).euclideanDist /= max;
 }
 
 void GDALSimpleSURF::SetDescriptor(
@@ -105,10 +118,139 @@ void GDALSimpleSURF::SetDescriptor(
 		}
 }
 
-void GDALSimpleSURF::MatchFeaturePoints(GDALFeaturePointsCollection *poColllect_1,
-			GDALFeaturePointsCollection *poColllect_2, double dfThreshold)
+void GDALSimpleSURF::MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
+		GDALFeaturePointsCollection *poCollect_1,
+		GDALFeaturePointsCollection *poCollect_2,
+		double dfThreshold)
 {
+	//Affects to pruning part
+	const double ratioThreshold = 0.8;
 
+	int len_1 = poCollect_1->GetSize();
+	int len_2 = poCollect_2->GetSize();
+
+	int minLength = (len_1 < len_2) ? len_1 : len_2;
+
+	//Tmp pointers. Used to swap collections
+	//and make p_1 minimal collection
+	GDALFeaturePointsCollection *p_1;
+	GDALFeaturePointsCollection *p_2;
+
+	bool isSwap = false;
+
+	//Assign p_1 - collection with minimal number of points
+	if (minLength == len_2)
+	{
+		p_1 = poCollect_2;
+		p_2 = poCollect_1;
+
+		int tmp = 0;
+		tmp = len_1;
+		len_1 = len_2;
+		len_2 = tmp;
+		isSwap = true;
+	}
+	else
+	{
+		//Assignment 'as is'
+		p_1 = poCollect_1;
+		p_2 = poCollect_2;
+		isSwap = false;
+	}
+
+	/*
+	 * Stores matched point indexes and
+	 * their euclidean distances
+	 * 1st point | 2nd point | distance
+	 */
+	list<MatchedPointPairInfo> *poPairInfoList =
+			new list<MatchedPointPairInfo>();
+
+	/*
+	 * Flags that points in the 2nd array are matched or not
+	 */
+	bool *alreadyMatched = new bool[len_2];
+	for (int i = 0; i < len_2; i++)
+		alreadyMatched[i] = false;
+
+	for (int i = 0; i < len_1; i++)
+	{
+		//Distance to the nearest point
+		double bestDist = -1;
+		//Index of the nearest point in p_2 collection
+		int bestIndex = -1;
+
+		//Distance to the 2nd nearest point
+		double bestDist_2 = -1;
+
+		//Find the nearest and 2nd nearest points
+		for (int j = 0; j < len_2; j++)
+			if (!alreadyMatched[j])
+				if ((*p_1)[i].GetSign() == (*p_2)[j].GetSign())
+				{
+					//Gets distance between two feature points
+					double curDist = GetEuclideanDistance((*p_1)[i], (*p_2)[j]);
+
+					if (bestDist == -1)
+					{
+						bestDist = curDist;
+						bestIndex = j;
+					}
+					else
+					{
+						if (curDist < bestDist)
+						{
+							bestDist = curDist;
+							bestIndex = j;
+						}
+					}
+
+					/*
+					 * Findes the 2nd nearest point
+					 */
+					if (bestDist_2 < 0)
+						bestDist_2 = curDist;
+					else
+						if (curDist > bestDist && curDist < bestDist_2)
+							bestDist_2 = curDist;
+				}
+		/*
+		 * FALSE DETECTION PRUNING
+		 * If ratio (1st / 2nd) > 0.8 - this is the false detection
+		 */
+		if (bestDist_2 > 0 && bestDist >= 0)
+			if (bestDist / bestDist_2 < ratioThreshold)
+			{
+				MatchedPointPairInfo info(i, bestIndex, bestDist);
+				poPairInfoList->push_back(info);
+				alreadyMatched[bestIndex] = true;
+			}
+	}
+
+	NormalizeDistances(poPairInfoList);
+
+	//Pruning based on the custom threshold (0..1)
+	list<MatchedPointPairInfo>::const_iterator iter;
+	for (iter = poPairInfoList->begin(); iter != poPairInfoList->end(); iter++)
+	{
+		if ((*iter).euclideanDist <= dfThreshold)
+		{
+			int i_1 = (*iter).ind_1;
+			int i_2 = (*iter).ind_2;
+
+			GDALFeaturePoint *poPoint_1 = &((*p_1)[i_1]);
+			GDALFeaturePoint *poPoint_2 = &((*p_2)[i_2]);
+
+			if(!isSwap)
+			{
+				poMatched->AddPoints(poPoint_1, poPoint_2);
+			}
+			else
+			{
+				poMatched->AddPoints(poPoint_2, poPoint_1);
+			}
+		}
+	}
 }
 
 GDALSimpleSURF::~GDALSimpleSURF()

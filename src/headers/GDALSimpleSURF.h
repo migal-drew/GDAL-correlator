@@ -5,11 +5,29 @@
 #include "GDALIntegralImage.h"
 #include "GDALFeaturePoint.h"
 #include "GDALFeaturePointsCollection.h"
+#include "GDALMatchedPointsCollection.h"
 
+#include <list>
 #include <math.h>
 
 class GDALSimpleSURF
 {
+private:
+	class MatchedPointPairInfo
+	{
+	public:
+		MatchedPointPairInfo(int nInd_1, int nInd_2, double dfDist)
+		{
+			ind_1 = nInd_1;
+			ind_2 = nInd_2;
+			euclideanDist = dfDist;
+		}
+
+		int ind_1;
+		int ind_2;
+		double euclideanDist;
+	};
+
 public:
 	GDALSimpleSURF(int nOctaveStart, int nOctaveEnd);
 	virtual ~GDALSimpleSURF();
@@ -17,13 +35,19 @@ public:
 	void ExtractFeaturePoints(GDALIntegralImage *poImg,
 			GDALFeaturePointsCollection *poCollection, double dfThreshold);
 
+	void MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
+			GDALFeaturePointsCollection *poCollect_1,
+			GDALFeaturePointsCollection *poCollect_2,
+			double dfThreshold);
+
+private:
 	double GetEuclideanDistance(
-			GDALFeaturePoint *poPoint_1, GDALFeaturePoint *poPoint_2);
+				GDALFeaturePoint &poPoint_1, GDALFeaturePoint &poPoint_2);
+
+	void NormalizeDistances(list<MatchedPointPairInfo> *poList);
 
 	void SetDescriptor(GDALFeaturePoint *poPoint, GDALIntegralImage *poImg);
 
-	void MatchFeaturePoints(GDALFeaturePointsCollection *poColllect_1,
-			GDALFeaturePointsCollection *poColllect_2, double dfThreshold);
 
 private:
 	int octaveStart;
