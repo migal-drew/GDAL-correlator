@@ -1,6 +1,8 @@
 #ifndef GDALFEATUREPOINTSCOLLECTION_H_
 #define GDALFEATUREPOINTSCOLLECTION_H_
 
+#include "GDALFeaturePoint.h"
+
 #include <vector>
 
 using namespace std;

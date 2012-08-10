@@ -18,7 +18,7 @@ public:
 	//2-dimensional array of octave layers
 	GDALOctaveLayer ***pMap;
 
-	static int INTERVALS = 4;
+	static const int INTERVALS = 4;
 
 	int octaveStart;
 	int octaveEnd;

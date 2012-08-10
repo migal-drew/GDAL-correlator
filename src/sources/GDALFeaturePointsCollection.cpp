@@ -7,6 +7,7 @@ GDALFeaturePointsCollection::GDALFeaturePointsCollection()
 
 void GDALFeaturePointsCollection::Add(GDALFeaturePoint *poPoint)
 {
+	//Copies Feature point
 	GDALFeaturePoint *poCopyPoint = new GDALFeaturePoint(*poPoint);
 
 	pPoints->push_back(poCopyPoint);
@@ -14,7 +15,9 @@ void GDALFeaturePointsCollection::Add(GDALFeaturePoint *poPoint)
 
 GDALFeaturePoint& GDALFeaturePointsCollection::operator [] (int i)
 {
-	return pPoints[i];
+	GDALFeaturePoint *p = (*pPoints)[i];
+
+	return (*p);
 }
 
 int GDALFeaturePointsCollection::GetSize() const
@@ -25,7 +28,7 @@ int GDALFeaturePointsCollection::GetSize() const
 void GDALFeaturePointsCollection::Clear()
 {
 	for (int i = 0; i < pPoints->size(); i++)
-			delete pPoints[i];
+			delete (*pPoints)[i];
 
 	pPoints->clear();
 }
@@ -33,7 +36,7 @@ void GDALFeaturePointsCollection::Clear()
 GDALFeaturePointsCollection::~GDALFeaturePointsCollection()
 {
 	for (int i = 0; i < pPoints->size(); i++)
-		delete pPoints[i];
+		delete (*pPoints)[i];
 
 	delete pPoints;
 }

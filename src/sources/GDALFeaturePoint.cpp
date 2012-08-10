@@ -71,8 +71,6 @@ void GDALFeaturePoint::SetRadius(int nRadius) { this->nRadius = nRadius; }
 int  GDALFeaturePoint::GetSign() { return nSign; }
 void GDALFeaturePoint::SetSign(int nSign) { this->nSign = nSign; }
 
-
-
 double& GDALFeaturePoint::operator [] (int i)
 {
 	return padfDescriptor[i];
