@@ -27,8 +27,14 @@ void GDALSimpleSURF::ExtractFeaturePoints(GDALIntegralImage *poImg,
 			for (int i = 0; i < mid->height; i++)
 				for (int j = 0; j < mid->width; j++)
 					if (poOctMap->PointIsExtremum(i, j, bot, mid, top, dfThreshold))
-						poCollection->Add(new GDALFeaturePoint(j, i, mid->scale,
-										mid->radius, mid->signs[i][j]));
+					{
+						GDALFeaturePoint *poFP = new GDALFeaturePoint(j, i, mid->scale,
+								mid->radius, mid->signs[i][j]);
+						SetDescriptor(poFP, poImg);
+
+						poCollection->Add(poFP);
+						delete poFP;
+					}
 		}
 	}
 }
@@ -54,8 +60,11 @@ void GDALSimpleSURF::NormalizeDistances(list<MatchedPointPairInfo> *poList)
 			max = (*i).euclideanDist;
 
 	//Normalize distances to one
-	for (i = poList->begin(); i != poList->end(); i++)
-		(*i).euclideanDist /= max;
+	if (max != 0)
+	{
+		for (i = poList->begin(); i != poList->end(); i++)
+			(*i).euclideanDist /= max;
+	}
 }
 
 void GDALSimpleSURF::SetDescriptor(
@@ -167,7 +176,7 @@ void GDALSimpleSURF::MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
 			new list<MatchedPointPairInfo>();
 
 	/*
-	 * Flags that points in the 2nd array are matched or not
+	 * Flags that points in the 2nd collection are matched or not
 	 */
 	bool *alreadyMatched = new bool[len_2];
 	for (int i = 0; i < len_2; i++)

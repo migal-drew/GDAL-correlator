@@ -32,6 +32,8 @@ GDALFeaturePoint::GDALFeaturePoint(int nX, int nY,
 	this->nScale = nScale;
 	this->nRadius = nRadius;
 	this->nSign = nSign;
+
+	this->padfDescriptor = new double[DESC_SIZE];
 }
 
 GDALFeaturePoint& GDALFeaturePoint::operator = (const GDALFeaturePoint& point)

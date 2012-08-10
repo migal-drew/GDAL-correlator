@@ -3,23 +3,28 @@
 #include "cpl_conv.h"
 #include "cpl_vsi.h"
 
+#include "GDALIntegralImage.h"
+#include "GDALSimpleSURF.h"
+#include "GDALFeaturePointsCollection.h"
+
 #define CPLFree VSIFree
 
+#include <fstream>
 #include <iostream>
 
 using namespace std;
 
-void printInfo(GDALDataset *poDataset)
+void printInfo(GDALDataset *poDataset_1)
 {
-	double adfGeoTransform[6];
+	//double adfGeoTransform[6];
 	printf( "Driver: %s/%s\n",
-			poDataset->GetDriver()->GetDescription(),
-			poDataset->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
+			poDataset_1->GetDriver()->GetDescription(),
+			poDataset_1->GetDriver()->GetMetadataItem( GDAL_DMD_LONGNAME ) );
 	printf( "Size %dx%dx%d\n",
-			poDataset->GetRasterXSize(), poDataset->GetRasterYSize(),
-			poDataset->GetRasterCount() );
-	if( poDataset->GetProjectionRef()  != NULL )
-		printf( "Projection \"%s\"\n", poDataset->GetProjectionRef() );
+			poDataset_1->GetRasterXSize(), poDataset_1->GetRasterYSize(),
+			poDataset_1->GetRasterCount() );
+	if( poDataset_1->GetProjectionRef()  != NULL )
+		printf( "Projection \"%s\"\n", poDataset_1->GetProjectionRef() );
 }
 
 CPLErr GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRasterBand *green, GDALRasterBand *blue,
@@ -65,12 +70,28 @@ CPLErr GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRasterBand *green, GD
 			double dfGreenVal = SRCVAL(paGreenLayer, eGreenType, nWidth * row + col * dataGreenSize);
 			double dfBlueVal = SRCVAL(paBlueLayer, eBlueType, nWidth * row + col * dataBlueSize);
 			//Compute luminosity value
-			padfImg[row][col] = dfRedVal * forRed + dfGreenVal * forGreen + dfBlueVal * forBlue;
+			padfImg[row][col] = (dfRedVal * forRed + dfGreenVal * forGreen
+					+ dfBlueVal * forBlue) / 255.0;
 		}
 
 	CPLFree(paRedLayer);
 	CPLFree(paGreenLayer);
 	CPLFree(paBlueLayer);
+
+	ofstream out;
+	out.open("lumonosity.txt");
+
+	for (int i = 0; i < nHeight; i++)
+	{
+		for (int j = 0; j < nWidth; j++)
+		{
+			out << padfImg[i][j] << " ";
+		}
+
+		out << endl;
+	}
+
+	out.close();
 
 	return CE_None;
 }
@@ -81,15 +102,20 @@ int main(int argc, char* argv[])
 
     GDALAllRegister();
 
-    GDALDataset  *poDataset;
+    GDALDataset  *poDataset_1;
+    GDALDataset  *poDataset_2;
 
-    poDataset = (GDALDataset *) GDALOpen( "/home/andrew/workspace/GDAL-correlator/Debug/lenna.jpg", GA_ReadOnly );
-	if( poDataset == NULL )
+    poDataset_1 = (GDALDataset *) GDALOpen( "/home/andrew/workspace/GDAL-correlator/Debug/lenna.jpg", GA_ReadOnly );
+	if( poDataset_1 == NULL )
        return 0;
 
-	GDALRasterBand *poRstRedBand = poDataset->GetRasterBand(1);
-	GDALRasterBand *poRstGreenBand = poDataset->GetRasterBand(2);
-	GDALRasterBand *poRstBlueBand = poDataset->GetRasterBand(3);
+	poDataset_2 = (GDALDataset *) GDALOpen( "/home/andrew/workspace/GDAL-correlator/Debug/lenna_2.jpg", GA_ReadOnly );
+	if( poDataset_1 == NULL )
+		return 0;
+
+	GDALRasterBand *poRstRedBand = poDataset_1->GetRasterBand(1);
+	GDALRasterBand *poRstGreenBand = poDataset_1->GetRasterBand(2);
+	GDALRasterBand *poRstBlueBand = poDataset_1->GetRasterBand(3);
 
 	int nWidth = 512;
 	int nHeight = 512;
@@ -99,10 +125,108 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < nHeight; i++)
 		padfImg[i] = new double[nWidth];
 
-	GDALConvertRGBToLuminosity(poRstRedBand, poRstGreenBand, poRstBlueBand, nWidth, nHeight,
-			padfImg, nHeight, nWidth);
+
+
+	GDALRasterBand *poRstRedBand_2 = poDataset_2->GetRasterBand(1);
+	GDALRasterBand *poRstGreenBand_2 = poDataset_2->GetRasterBand(2);
+	GDALRasterBand *poRstBlueBand_2 = poDataset_2->GetRasterBand(3);
+
+	int nWidth_2 = poRstRedBand_2->GetXSize();
+	int nHeight_2 = poRstRedBand_2->GetYSize();;
+	double **padfImg_2 = NULL;
+
+	padfImg_2 = new double*[nHeight_2];
+	for (int i = 0; i < nHeight; i++)
+		padfImg_2[i] = new double[nWidth_2];
+
 
 	cout << poRstRedBand->GetMaximum();
+
+
+	GDALConvertRGBToLuminosity(poRstRedBand, poRstGreenBand, poRstBlueBand, nWidth, nHeight,
+			padfImg, nHeight, nWidth);
+	GDALConvertRGBToLuminosity(poRstRedBand_2, poRstGreenBand_2, poRstBlueBand_2, nWidth_2, nHeight_2,
+			padfImg_2, nHeight_2, nWidth_2);
+
+	GDALIntegralImage *poImg = new GDALIntegralImage();
+	poImg->Initialize(padfImg, nHeight, nWidth);
+
+	GDALIntegralImage *poImg_2 = new GDALIntegralImage();
+	poImg_2->Initialize(padfImg_2, nHeight_2, nWidth_2);
+
+	/*
+	//-----------------------------------------------
+	// DEBUG
+	//----------------------------------------------
+	ofstream out;
+
+	out.open("integral.txt");
+
+	for (int i = 0; i < nHeight; i++)
+	{
+		for (int j = 0; j < nWidth; j++)
+		{
+			out << poImg->GetValue(i, j) << " ";
+		}
+
+		out << endl;
+	}
+
+	out.close();
+    //----------------------------------------------
+	*/
+
+	GDALFeaturePointsCollection *poFPCollection = new GDALFeaturePointsCollection();
+	GDALFeaturePointsCollection *poFPCollection_2 = new GDALFeaturePointsCollection();
+
+	GDALSimpleSURF *poSurf = new GDALSimpleSURF(2, 2);
+	poSurf->ExtractFeaturePoints(poImg, poFPCollection, 0.005);
+	poSurf->ExtractFeaturePoints(poImg_2, poFPCollection_2, 0.005);
+
+
+	GDALMatchedPointsCollection *result = new GDALMatchedPointsCollection();
+	poSurf->MatchFeaturePoints(result, poFPCollection, poFPCollection_2, 1);
+
+	ofstream out;
+	out.open("points_1.txt");
+	for (int i = 0; i < poFPCollection->GetSize(); i++)
+		out << (*poFPCollection)[i].GetX() << " "
+			<< (*poFPCollection)[i].GetY() << endl;
+
+	out.close();
+
+	out.open("points_2.txt");
+	for (int i = 0; i < poFPCollection_2->GetSize(); i++)
+		out << (*poFPCollection_2)[i].GetX() << " "
+			<< (*poFPCollection_2)[i].GetY() << endl;
+
+	out.close();
+
+
+	for (int i = 0; i < result->GetSize(); i++)
+	{
+		GDALFeaturePoint *point_1 = new GDALFeaturePoint();
+		GDALFeaturePoint *point_2 = new GDALFeaturePoint();
+
+		result->GetPoints(i, point_1, point_2);
+
+		cout << endl;
+		cout << point_1->GetX() << " " << point_1->GetY() << " ";
+		cout << "  ||   ";
+		cout << point_2->GetX() << " " << point_2->GetY() << " ";
+		cout << endl;
+	}
+	/*
+	//-------------------------------------------
+	out.open("points_1.txt");
+	for (int i = 0; i < poFPCollection->GetSize(); i++)
+		out << (*poFPCollection)[i].GetX() << " "
+			<< (*poFPCollection)[i].GetY() << endl;
+
+	out.close();
+	//----------------------------------------------
+	*/
+
 
 	/*
 	double dfRedVal_0 = SRCVAL(paLayer, eType, 0);
@@ -131,7 +255,7 @@ int main(int argc, char* argv[])
 	unsigned char a11 = ((unsigned char*)paLayer)[10];
 	*/
 
-	delete poDataset;
+	delete poDataset_1;
 
 	return 0;
 }
