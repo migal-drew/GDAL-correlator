@@ -7,8 +7,14 @@
 #include "GDALFeaturePointsCollection.h"
 #include "GDALMatchedPointsCollection.h"
 
+#include "gdal.h"
+#include "gdal_priv.h"
+#include "cpl_vsi.h"
+
 #include <list>
 #include <math.h>
+
+#define CPLFree VSIFree
 
 class GDALSimpleSURF
 {
@@ -31,6 +37,9 @@ private:
 public:
 	GDALSimpleSURF(int nOctaveStart, int nOctaveEnd);
 	virtual ~GDALSimpleSURF();
+
+	static CPLErr GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRasterBand *green, GDALRasterBand *blue,
+			int nXSize, int nYSize, double **padfImg, int nHeight, int nWidth);
 
 	void ExtractFeaturePoints(GDALIntegralImage *poImg,
 			GDALFeaturePointsCollection *poCollection, double dfThreshold);

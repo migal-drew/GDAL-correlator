@@ -6,6 +6,61 @@ GDALSimpleSURF::GDALSimpleSURF(int nOctaveStart, int nOctaveEnd)
 	this->octaveEnd = nOctaveEnd;
 }
 
+CPLErr GDALSimpleSURF::GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRasterBand *green, GDALRasterBand *blue,
+		int nXSize, int nYSize, double **padfImg, int nHeight, int nWidth)
+{
+    const double forRed = 0.21;
+    const double forGreen = 0.72;
+    const double forBlue = 0.07;
+
+	if (red == NULL || green == NULL || blue == NULL)
+	{
+		CPLError(CE_Failure, CPLE_AppDefined, "Raster bands are not specified");
+		return CE_Failure;
+	}
+
+	if (padfImg == NULL)
+	{
+		CPLError(CE_Failure, CPLE_AppDefined, "Buffer isn't specified");
+		return CE_Failure;
+	}
+
+	GDALDataType eRedType = red->GetRasterDataType();
+	GDALDataType eGreenType = green->GetRasterDataType();
+	GDALDataType eBlueType = blue->GetRasterDataType();
+
+	int dataRedSize = GDALGetDataTypeSize(eRedType) / 8;
+	int dataGreenSize = GDALGetDataTypeSize(eGreenType) / 8;
+	int dataBlueSize = GDALGetDataTypeSize(eBlueType) / 8;
+
+	void *paRedLayer = CPLMalloc(dataRedSize * nWidth * nHeight);
+	void *paGreenLayer = CPLMalloc(dataGreenSize * nWidth * nHeight);
+	void *paBlueLayer = CPLMalloc(dataBlueSize * nWidth * nHeight);
+
+	red->RasterIO(GF_Read, 0, 0, nXSize, nYSize, paRedLayer, nWidth, nHeight, eRedType, 0, 0);
+	green->RasterIO(GF_Read, 0, 0, nXSize, nYSize, paGreenLayer, nWidth, nHeight, eGreenType, 0, 0);
+	blue->RasterIO(GF_Read, 0, 0, nXSize, nYSize, paBlueLayer, nWidth, nHeight, eBlueType, 0, 0);
+
+	double maxValue = 255.0;
+	for (int row = 0; row < nHeight; row++)
+		for (int col = 0; col < nWidth; col++)
+		{
+			//Get RGB values
+			double dfRedVal = SRCVAL(paRedLayer, eRedType, nWidth * row + col * dataRedSize);
+			double dfGreenVal = SRCVAL(paGreenLayer, eGreenType, nWidth * row + col * dataGreenSize);
+			double dfBlueVal = SRCVAL(paBlueLayer, eBlueType, nWidth * row + col * dataBlueSize);
+			//Compute luminosity value
+			padfImg[row][col] = (dfRedVal * forRed + dfGreenVal * forGreen
+					+ dfBlueVal * forBlue) / maxValue;
+		}
+
+	CPLFree(paRedLayer);
+	CPLFree(paGreenLayer);
+	CPLFree(paBlueLayer);
+
+	return CE_None;
+}
+
 void GDALSimpleSURF::ExtractFeaturePoints(GDALIntegralImage *poImg,
 			GDALFeaturePointsCollection *poCollection, double dfThreshold)
 {
