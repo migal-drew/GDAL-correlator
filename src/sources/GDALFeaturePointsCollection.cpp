@@ -3,21 +3,27 @@
 GDALFeaturePointsCollection::GDALFeaturePointsCollection()
 {
 	pPoints = new vector<GDALFeaturePoint*>();
+	poDataset = NULL;
 }
 
-void GDALFeaturePointsCollection::Add(GDALFeaturePoint *poPoint)
+GDALFeaturePointsCollection::GDALFeaturePointsCollection(GDALDataset* poDataset)
 {
-	//Copies Feature point
-	GDALFeaturePoint *poCopyPoint = new GDALFeaturePoint(*poPoint);
-
-	pPoints->push_back(poCopyPoint);
+	this->pPoints = new vector<GDALFeaturePoint*>();
+	this->poDataset = poDataset;
 }
 
-GDALFeaturePoint& GDALFeaturePointsCollection::operator [] (int i)
+void GDALFeaturePointsCollection::AddPoint(GDALFeaturePoint *poPoint)
 {
-	GDALFeaturePoint *p = (*pPoints)[i];
+	if (poPoint != NULL)
+		pPoints->push_back(poPoint);
+}
 
-	return (*p);
+GDALFeaturePoint* GDALFeaturePointsCollection::GetPoint(int nIndex)
+{
+	if (nIndex < 0 || nIndex < this->GetSize())
+		return NULL;
+
+	return pPoints->at(nIndex);
 }
 
 int GDALFeaturePointsCollection::GetSize() const

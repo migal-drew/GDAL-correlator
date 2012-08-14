@@ -3,6 +3,9 @@
 
 #include "GDALFeaturePoint.h"
 
+#include "gdal.h"
+#include "gdal_priv.h"
+
 #include <vector>
 
 using namespace std;
@@ -11,15 +14,16 @@ class GDALFeaturePointsCollection
 {
 public:
 	GDALFeaturePointsCollection();
+	GDALFeaturePointsCollection(GDALDataset* poDataset);
 	virtual ~GDALFeaturePointsCollection();
 
-	void Add(GDALFeaturePoint *fp);
+	void AddPoint(GDALFeaturePoint *fp);
+	GDALFeaturePoint* GetPoint(int nIndex);
 	int GetSize() const;
 	void Clear();
 
-	GDALFeaturePoint& operator[](int i);
-
 private:
+	GDALDataset* poDataset;
 	vector<GDALFeaturePoint*> *pPoints;
 };
 

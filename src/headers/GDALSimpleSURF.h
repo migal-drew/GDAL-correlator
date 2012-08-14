@@ -38,22 +38,27 @@ public:
 	GDALSimpleSURF(int nOctaveStart, int nOctaveEnd);
 	virtual ~GDALSimpleSURF();
 
-	static CPLErr GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRasterBand *green, GDALRasterBand *blue,
-			int nXSize, int nYSize, double **padfImg, int nHeight, int nWidth);
+	static CPLErr ConvertRGBToLuminosity(
+				GDALRasterBand *red,
+				GDALRasterBand *green,
+				GDALRasterBand *blue,
+				int nXSize, int nYSize,
+				double **padfImg, int nHeight, int nWidth);
 
 	void ExtractFeaturePoints(GDALIntegralImage *poImg,
 			GDALFeaturePointsCollection *poCollection, double dfThreshold);
 
-	void MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
-			GDALFeaturePointsCollection *poCollect_1,
-			GDALFeaturePointsCollection *poCollect_2,
-			double dfThreshold);
+	static CPLErr MatchFeaturePoints(
+				GDALMatchedPointsCollection *poMatched,
+				GDALFeaturePointsCollection *poCollect_1,
+				GDALFeaturePointsCollection *poCollect_2,
+				double dfThreshold);
 
 private:
-	double GetEuclideanDistance(
+	static double GetEuclideanDistance(
 				GDALFeaturePoint &poPoint_1, GDALFeaturePoint &poPoint_2);
 
-	void NormalizeDistances(list<MatchedPointPairInfo> *poList);
+	static void NormalizeDistances(list<MatchedPointPairInfo> *poList);
 
 	void SetDescriptor(GDALFeaturePoint *poPoint, GDALIntegralImage *poImg);
 

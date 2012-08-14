@@ -6,7 +6,8 @@ GDALSimpleSURF::GDALSimpleSURF(int nOctaveStart, int nOctaveEnd)
 	this->octaveEnd = nOctaveEnd;
 }
 
-CPLErr GDALSimpleSURF::GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRasterBand *green, GDALRasterBand *blue,
+CPLErr GDALSimpleSURF::ConvertRGBToLuminosity(
+		GDALRasterBand *red, GDALRasterBand *green, GDALRasterBand *blue,
 		int nXSize, int nYSize, double **padfImg, int nHeight, int nWidth)
 {
     const double forRed = 0.21;
@@ -15,7 +16,8 @@ CPLErr GDALSimpleSURF::GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRaste
 
 	if (red == NULL || green == NULL || blue == NULL)
 	{
-		CPLError(CE_Failure, CPLE_AppDefined, "Raster bands are not specified");
+		CPLError(CE_Failure, CPLE_AppDefined,
+				"Raster bands are not specified");
 		return CE_Failure;
 	}
 
@@ -46,12 +48,17 @@ CPLErr GDALSimpleSURF::GDALConvertRGBToLuminosity(GDALRasterBand *red, GDALRaste
 		for (int col = 0; col < nWidth; col++)
 		{
 			//Get RGB values
-			double dfRedVal = SRCVAL(paRedLayer, eRedType, nWidth * row + col * dataRedSize);
-			double dfGreenVal = SRCVAL(paGreenLayer, eGreenType, nWidth * row + col * dataGreenSize);
-			double dfBlueVal = SRCVAL(paBlueLayer, eBlueType, nWidth * row + col * dataBlueSize);
+			double dfRedVal = SRCVAL(paRedLayer, eRedType,
+					nWidth * row + col * dataRedSize);
+			double dfGreenVal = SRCVAL(paGreenLayer, eGreenType,
+					nWidth * row + col * dataGreenSize);
+			double dfBlueVal = SRCVAL(paBlueLayer, eBlueType,
+					nWidth * row + col * dataBlueSize);
 			//Compute luminosity value
-			padfImg[row][col] = (dfRedVal * forRed + dfGreenVal * forGreen
-					+ dfBlueVal * forBlue) / maxValue;
+			padfImg[row][col] = (
+					dfRedVal * forRed +
+					dfGreenVal * forGreen +
+					dfBlueVal * forBlue) / maxValue;
 		}
 
 	CPLFree(paRedLayer);
@@ -83,12 +90,12 @@ void GDALSimpleSURF::ExtractFeaturePoints(GDALIntegralImage *poImg,
 				for (int j = 0; j < mid->width; j++)
 					if (poOctMap->PointIsExtremum(i, j, bot, mid, top, dfThreshold))
 					{
-						GDALFeaturePoint *poFP = new GDALFeaturePoint(j, i, mid->scale,
+						GDALFeaturePoint *poFP = new GDALFeaturePoint(
+								j, i, mid->scale,
 								mid->radius, mid->signs[i][j]);
 						SetDescriptor(poFP, poImg);
 
-						poCollection->Add(poFP);
-						delete poFP;
+						poCollection->AddPoint(poFP);
 					}
 		}
 	}
@@ -114,7 +121,7 @@ void GDALSimpleSURF::NormalizeDistances(list<MatchedPointPairInfo> *poList)
 		if ((*i).euclideanDist > max)
 			max = (*i).euclideanDist;
 
-	//Normalize distances to one
+	// Normalize distances to one
 	if (max != 0)
 	{
 		for (i = poList->begin(); i != poList->end(); i++)
@@ -125,19 +132,19 @@ void GDALSimpleSURF::NormalizeDistances(list<MatchedPointPairInfo> *poList)
 void GDALSimpleSURF::SetDescriptor(
 		GDALFeaturePoint *poPoint, GDALIntegralImage *poImg)
 {
-	//Affects to the descriptor area
+	// Affects to the descriptor area
 	const int haarScale = 20;
 
-	//Side of the Haar wavelet
+	// Side of the Haar wavelet
 	int haarFilterSize = 2 * poPoint->GetScale();
 
-	//Length of the side of the descriptor area
+	// Length of the side of the descriptor area
 	int descSide = haarScale * poPoint->GetScale();
 
-	//Side of the quadrant in 4x4 grid
+	// Side of the quadrant in 4x4 grid
 	int quadStep = descSide / 4;
 
-	//Side of the sub-quadrant in 5x5 regular grid of quadrant
+	// Side of the sub-quadrant in 5x5 regular grid of quadrant
 	int subQuadStep = quadStep / 5;
 
 	int leftTop_row = poPoint->GetY() - (descSide / 2);
@@ -156,15 +163,15 @@ void GDALSimpleSURF::SetDescriptor(
 			for (int sub_r = r; sub_r < r + quadStep; sub_r += subQuadStep)
 				for (int sub_c = c; sub_c < c + quadStep; sub_c += subQuadStep)
 				{
-					//Approximate center of sub quadrant
+					// Approximate center of sub quadrant
 					int cntr_r = sub_r + subQuadStep / 2;
 					int cntr_c = sub_c + subQuadStep / 2;
 
-					//Left top point for Haar wavelet computation
+					// Left top point for Haar wavelet computation
 					int cur_r = cntr_r - haarFilterSize / 2;
 					int cur_c = cntr_c - haarFilterSize / 2;
 
-					//Gradients
+					// Gradients
 					double cur_dx = poImg->HaarWavelet_X(cur_r, cur_c, haarFilterSize);
 					double cur_dy = poImg->HaarWavelet_Y(cur_r, cur_c, haarFilterSize);
 
@@ -174,7 +181,7 @@ void GDALSimpleSURF::SetDescriptor(
 					abs_dy += fabs(cur_dy);
 				}
 
-			//Fills point's descriptor
+			// Fills point's descriptor
 			(*poPoint)[count++] = dx;
 			(*poPoint)[count++] = dy;
 			(*poPoint)[count++] = abs_dx;
@@ -182,12 +189,27 @@ void GDALSimpleSURF::SetDescriptor(
 		}
 }
 
-void GDALSimpleSURF::MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
+CPLErr GDALSimpleSURF::MatchFeaturePoints(
+		GDALMatchedPointsCollection *poMatched,
 		GDALFeaturePointsCollection *poCollect_1,
 		GDALFeaturePointsCollection *poCollect_2,
 		double dfThreshold)
 {
-	//Affects to pruning part
+	if (poMatched == NULL)
+	{
+		CPLError(CE_Failure, CPLE_AppDefined,
+				"Matched points colection isn't specified");
+		return CE_Failure;
+	}
+
+	if (poCollect_1 == NULL || poCollect_2 == NULL)
+	{
+		CPLError(CE_Failure, CPLE_AppDefined,
+				"Feature point collections are not specified");
+		return CE_Failure;
+	}
+
+	// Affects to false matching pruning
 	const double ratioThreshold = 0.8;
 
 	int len_1 = poCollect_1->GetSize();
@@ -195,14 +217,13 @@ void GDALSimpleSURF::MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
 
 	int minLength = (len_1 < len_2) ? len_1 : len_2;
 
-	//Tmp pointers. Used to swap collections
-	//and make p_1 minimal collection
+	// Temporary pointers. Used to swap collections
 	GDALFeaturePointsCollection *p_1;
 	GDALFeaturePointsCollection *p_2;
 
 	bool isSwap = false;
 
-	//Assign p_1 - collection with minimal number of points
+	// Assign p_1 - collection with minimal number of points
 	if (minLength == len_2)
 	{
 		p_1 = poCollect_2;
@@ -216,7 +237,7 @@ void GDALSimpleSURF::MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
 	}
 	else
 	{
-		//Assignment 'as is'
+		// Assignment 'as is'
 		p_1 = poCollect_1;
 		p_2 = poCollect_2;
 		isSwap = false;
@@ -225,7 +246,6 @@ void GDALSimpleSURF::MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
 	/*
 	 * Stores matched point indexes and
 	 * their euclidean distances
-	 * 1st point | 2nd point | distance
 	 */
 	list<MatchedPointPairInfo> *poPairInfoList =
 			new list<MatchedPointPairInfo>();
@@ -239,21 +259,23 @@ void GDALSimpleSURF::MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
 
 	for (int i = 0; i < len_1; i++)
 	{
-		//Distance to the nearest point
+		// Distance to the nearest point
 		double bestDist = -1;
-		//Index of the nearest point in p_2 collection
+		// Index of the nearest point in p_2 collection
 		int bestIndex = -1;
 
-		//Distance to the 2nd nearest point
+		// Distance to the 2nd nearest point
 		double bestDist_2 = -1;
 
-		//Find the nearest and 2nd nearest points
+		// Find the nearest and 2nd nearest points
 		for (int j = 0; j < len_2; j++)
 			if (!alreadyMatched[j])
-				if ((*p_1)[i].GetSign() == (*p_2)[j].GetSign())
+				if (p_1->GetPoint(i)->GetSign() ==
+						p_2->GetPoint(j)->GetSign())
 				{
-					//Gets distance between two feature points
-					double curDist = GetEuclideanDistance((*p_1)[i], (*p_2)[j]);
+					// Get distance between two feature points
+					double curDist = GetEuclideanDistance(
+							*(p_1->GetPoint(i)), *(p_2->GetPoint(j)));
 
 					if (bestDist == -1)
 					{
@@ -293,7 +315,7 @@ void GDALSimpleSURF::MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
 
 	NormalizeDistances(poPairInfoList);
 
-	//Pruning based on the custom threshold (0..1)
+	// Pruning based on the custom threshold (0..1)
 	list<MatchedPointPairInfo>::const_iterator iter;
 	for (iter = poPairInfoList->begin(); iter != poPairInfoList->end(); iter++)
 	{
@@ -302,9 +324,15 @@ void GDALSimpleSURF::MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
 			int i_1 = (*iter).ind_1;
 			int i_2 = (*iter).ind_2;
 
-			GDALFeaturePoint *poPoint_1 = &((*p_1)[i_1]);
-			GDALFeaturePoint *poPoint_2 = &((*p_2)[i_2]);
+			// New pair of matched points
+			GDALFeaturePoint *poPoint_1 = new GDALFeaturePoint();
+			GDALFeaturePoint *poPoint_2 = new GDALFeaturePoint();
 
+			// Copy objects
+			(*poPoint_1) = (*p_1->GetPoint(i_1));
+			(*poPoint_2) = (*p_2->GetPoint(i_2));
+
+			// Add copies into MatchedCollection
 			if(!isSwap)
 			{
 				poMatched->AddPoints(poPoint_1, poPoint_2);
@@ -315,6 +343,8 @@ void GDALSimpleSURF::MatchFeaturePoints(GDALMatchedPointsCollection *poMatched,
 			}
 		}
 	}
+
+	return CE_None;
 }
 
 GDALSimpleSURF::~GDALSimpleSURF()

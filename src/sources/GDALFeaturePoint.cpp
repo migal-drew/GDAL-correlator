@@ -46,10 +46,10 @@ GDALFeaturePoint& GDALFeaturePoint::operator = (const GDALFeaturePoint& point)
 		nRadius = point.nRadius;
 		nSign = point.nSign;
 
-		//Frees memory
+		//Free memory
 		delete[] padfDescriptor;
 
-		//Copies descriptor values
+		//Copy descriptor values
 		padfDescriptor = new double[DESC_SIZE];
 		for (int i = 0; i < DESC_SIZE; i++)
 			padfDescriptor[i] = point.padfDescriptor[i];
