@@ -50,9 +50,9 @@ CPLErr GDALCorrelator::GatherFeaturePoints(
 		return CE_Failure;
 	}
 
-	GDALRasterBand *poRstRedBand = poDataset->GetRasterBand(panBands[1]);
-	GDALRasterBand *poRstGreenBand = poDataset->GetRasterBand(panBands[2]);
-	GDALRasterBand *poRstBlueBand = poDataset->GetRasterBand(panBands[3]);
+	GDALRasterBand *poRstRedBand = poDataset->GetRasterBand(panBands[0]);
+	GDALRasterBand *poRstGreenBand = poDataset->GetRasterBand(panBands[1]);
+	GDALRasterBand *poRstBlueBand = poDataset->GetRasterBand(panBands[2]);
 
 	int nWidth = poRstRedBand->GetXSize();
 	int nHeight = poRstRedBand->GetYSize();
@@ -82,6 +82,7 @@ CPLErr GDALCorrelator::GatherFeaturePoints(
 
 	for (int i = 0; i < nHeight; i++)
 		delete[] padfImg[i];
+
 	delete[] padfImg;
 
 	return CE_None;

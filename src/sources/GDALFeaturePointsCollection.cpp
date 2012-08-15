@@ -20,7 +20,7 @@ void GDALFeaturePointsCollection::AddPoint(GDALFeaturePoint *poPoint)
 
 GDALFeaturePoint* GDALFeaturePointsCollection::GetPoint(int nIndex)
 {
-	if (nIndex < 0 || nIndex < this->GetSize())
+	if (nIndex < 0 || nIndex >= this->GetSize())
 		return NULL;
 
 	return pPoints->at(nIndex);

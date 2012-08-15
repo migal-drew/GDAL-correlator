@@ -21,8 +21,9 @@ void GDALMatchedPointsCollection::GetPoints(
 	if (poPoint_1 == NULL || poPoint_2 == NULL || nIndex < 0 || nIndex >= size)
 		return;
 
-	poPoint_1 = poCollect_1->GetPoint(nIndex);
-	poPoint_2 = poCollect_2->GetPoint(nIndex);
+	// Copy points
+	*poPoint_1 = *(poCollect_1->GetPoint(nIndex));
+	*poPoint_2 = *(poCollect_2->GetPoint(nIndex));
 }
 
 int GDALMatchedPointsCollection::GetSize() const
@@ -32,5 +33,6 @@ int GDALMatchedPointsCollection::GetSize() const
 
 GDALMatchedPointsCollection::~GDALMatchedPointsCollection()
 {
-
+	delete poCollect_1;
+	delete poCollect_2;
 }

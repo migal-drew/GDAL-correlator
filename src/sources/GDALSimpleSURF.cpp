@@ -4,6 +4,9 @@ GDALSimpleSURF::GDALSimpleSURF(int nOctaveStart, int nOctaveEnd)
 {
 	this->octaveStart = nOctaveStart;
 	this->octaveEnd = nOctaveEnd;
+
+	//Initialize Octave map with custom range
+	poOctMap = new GDALOctaveMap(octaveStart, octaveEnd);
 }
 
 CPLErr GDALSimpleSURF::ConvertRGBToLuminosity(
@@ -71,9 +74,6 @@ CPLErr GDALSimpleSURF::ConvertRGBToLuminosity(
 void GDALSimpleSURF::ExtractFeaturePoints(GDALIntegralImage *poImg,
 			GDALFeaturePointsCollection *poCollection, double dfThreshold)
 {
-	//Initialize Octave map with custom range
-	poOctMap = new GDALOctaveMap(octaveStart, octaveEnd);
-
 	//Calc Hessian values for layers
 	poOctMap->ComputeMap(poImg);
 
@@ -343,6 +343,9 @@ CPLErr GDALSimpleSURF::MatchFeaturePoints(
 			}
 		}
 	}
+
+	// Clean up
+	delete[] alreadyMatched;
 
 	return CE_None;
 }

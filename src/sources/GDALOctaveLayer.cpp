@@ -1,18 +1,5 @@
 #include "GDALOctaveLayer.h"
 
-GDALOctaveLayer::GDALOctaveLayer()
-{
-	this->octaveNum =   0;
-	this->filterSize =  0;
-	this->scale =       0;
-	this->radius =      0;
-	this->height =      0;
-	this->width =       0;
-
-	this->detHessians = 0;
-	this->signs =       0;
-}
-
 GDALOctaveLayer::GDALOctaveLayer(int nOctave, int nInterval)
 {
 	this->octaveNum = nOctave;
@@ -22,15 +9,8 @@ GDALOctaveLayer::GDALOctaveLayer(int nOctave, int nInterval)
 	this->width = 0;
 	this->height = 0;
 
-	//Allocate memory for arrays
-	this->detHessians = new double*[this->height];
-	this->signs = new int*[this->height];
-
-	for (int i = 0; i < this->width; i++)
-	{
-		this->detHessians[i] = new double[this->width];
-		this->signs[i] = new int[this->width];
-	}
+	this->detHessians = 0;
+	this->signs = 0;
 }
 
 void GDALOctaveLayer::ComputeLayer(GDALIntegralImage *poImg)
@@ -42,7 +22,7 @@ void GDALOctaveLayer::ComputeLayer(GDALIntegralImage *poImg)
 	this->detHessians = new double*[this->height];
 	this->signs = new int*[this->height];
 
-	for (int i = 0; i < this->width; i++)
+	for (int i = 0; i < this->height; i++)
 	{
 		this->detHessians[i] = new double[this->width];
 		this->signs[i] = new int[this->width];
@@ -80,6 +60,11 @@ void GDALOctaveLayer::ComputeLayer(GDALIntegralImage *poImg)
 			//Memorize Hessian values and their signs
 			detHessians[r][c] = dxx * dyy - 0.9 * 0.9 * dxy * dxy;
 			signs[r][c] = (dxx + dyy >= 0) ? 1 : -1;
+
+			double t;
+			t = detHessians[r][c];
+
+			int tmp = 0;
 		}
 }
 

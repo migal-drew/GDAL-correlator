@@ -43,16 +43,19 @@ int main(int argc, char* argv[])
 	int nOctStart = 2;
 	int nOctEnd = 2;
 	double dfSURFTreshold = 0.001;
-	double dfMatchingThreshold = 0.25;
+	double dfMatchingThreshold = 0.015;
 
-	correlator->GatherFeaturePoints(poDataset_1, NULL,
+	int* panBands = new int[3];
+	for (int i = 0; i < 3; i++)
+		panBands[i] = i + 1;
+
+	correlator->GatherFeaturePoints(poDataset_1, panBands,
 			poFPCollection_1, nOctStart, nOctEnd, dfSURFTreshold);
-	correlator->GatherFeaturePoints(poDataset_1, NULL,
+	correlator->GatherFeaturePoints(poDataset_2, panBands,
 			poFPCollection_2, nOctStart, nOctEnd, dfSURFTreshold);
 
 	correlator->MatchFeaturePoints(poMatched,
 			poFPCollection_1, poFPCollection_2, dfMatchingThreshold);
-
 
 	/**
 	 * Using <fstream> is only for demonstration purposes
@@ -72,6 +75,8 @@ int main(int argc, char* argv[])
 
 	out.close();
 
+	delete poFPCollection_1;
+	delete poFPCollection_2;
 
 	GDALFeaturePoint *point_1 = new GDALFeaturePoint();
 	GDALFeaturePoint *point_2 = new GDALFeaturePoint();
@@ -81,7 +86,6 @@ int main(int argc, char* argv[])
 	{
 		poMatched->GetPoints(i, point_1, point_2);
 
-		out << endl;
 		out << point_1->GetX() << ", " << point_1->GetY();
 		out << " | ";
 		out << point_2->GetX() << ", " << point_2->GetY();
@@ -90,13 +94,18 @@ int main(int argc, char* argv[])
 	out.close();
 
 
+	delete correlator;
 	delete poDataset_1;
 	delete poDataset_2;
-	delete poFPCollection_1;
-	delete poFPCollection_2;
+	//delete poFPCollection_1;
+	//delete poFPCollection_2;
 	delete poMatched;
 	delete point_1;
 	delete point_2;
+
+	delete[] panBands;
+
+	printf("Everything looks good...\n");
 
 	return 0;
 }

@@ -6,6 +6,7 @@
 #include "cpl_conv.h"
 #include "cpl_vsi.h"
 
+#include "GDALFeaturePoint.h"
 #include "GDALFeaturePointsCollection.h"
 #include "GDALMatchedPointsCollection.h"
 #include "GDALSimpleSURF.h"
