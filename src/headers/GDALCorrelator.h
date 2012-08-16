@@ -91,12 +91,12 @@ CPLErr GatherFeaturePoints(GDALDataset* poDataset, int* panBands,
 
 CPLErr MatchFeaturePoints(
 			GDALMatchedPointsCollection* poMatched,
-			GDALFeaturePointsCollection* poCollection_1,
-			GDALFeaturePointsCollection* poCollection_2,
+			GDALFeaturePointsCollection* poFirstCollection,
+			GDALFeaturePointsCollection* poSecondCollection,
 			double dfThreshold)
 {
 	GDALSimpleSURF::MatchFeaturePoints(poMatched,
-			poCollection_1, poCollection_2, dfThreshold);
+			poFirstCollection, poSecondCollection, dfThreshold);
 
 	return CE_None;
 }

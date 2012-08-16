@@ -1,3 +1,16 @@
+/**
+ * @file
+ * @author  Andrew Migal migal.drew@gmail.com
+ *
+ * This program is free software
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY
+ *
+ * This is the main function for demosnstration
+ *
+ */
+
 #include "gdal.h"
 #include "gdal_priv.h"
 #include "cpl_conv.h"
@@ -13,7 +26,9 @@
 
 using namespace std;
 
-
+/**
+ * Main function, which invokes correlator methods
+ */
 int main(int argc, char* argv[])
 {
     GDALAllRegister();
@@ -52,13 +67,13 @@ int main(int argc, char* argv[])
 			poFPCollection_1, nOctStart, nOctEnd, dfSURFTreshold);
 	GatherFeaturePoints(poDataset_2, panBands,
 			poFPCollection_2, nOctStart, nOctEnd, dfSURFTreshold);
-	// Use found points to find correspondences
+	// Use gathered points to find correspondences
 	MatchFeaturePoints(poMatched,
 			poFPCollection_1, poFPCollection_2, dfMatchingThreshold);
 
-	/**
-	 * Using <fstream> is only for demonstration purposes
-	 */
+/* -------------------------------------------------------------------- */
+/*      Printing parameters for demonstration                           */
+/* -------------------------------------------------------------------- */
 	ofstream out;
 
 	out.open("points_1.txt");
@@ -73,9 +88,6 @@ int main(int argc, char* argv[])
 			<< poFPCollection_2->GetPoint(i)->GetY() << endl;
 
 	out.close();
-
-	delete poFPCollection_1;
-	delete poFPCollection_2;
 
 	GDALFeaturePoint *point_1 = new GDALFeaturePoint();
 	GDALFeaturePoint *point_2 = new GDALFeaturePoint();
@@ -94,8 +106,8 @@ int main(int argc, char* argv[])
 
 	delete poDataset_1;
 	delete poDataset_2;
-	//delete poFPCollection_1;
-	//delete poFPCollection_2;
+	delete poFPCollection_1;
+	delete poFPCollection_2;
 	delete poMatched;
 	delete point_1;
 	delete point_2;

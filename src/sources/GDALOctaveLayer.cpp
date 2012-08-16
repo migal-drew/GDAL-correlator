@@ -60,11 +60,6 @@ void GDALOctaveLayer::ComputeLayer(GDALIntegralImage *poImg)
 			//Memorize Hessian values and their signs
 			detHessians[r][c] = dxx * dyy - 0.9 * 0.9 * dxy * dxy;
 			signs[r][c] = (dxx + dyy >= 0) ? 1 : -1;
-
-			double t;
-			t = detHessians[r][c];
-
-			int tmp = 0;
 		}
 }
 

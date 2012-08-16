@@ -5,7 +5,7 @@ GDALSimpleSURF::GDALSimpleSURF(int nOctaveStart, int nOctaveEnd)
 	this->octaveStart = nOctaveStart;
 	this->octaveEnd = nOctaveEnd;
 
-	//Initialize Octave map with custom range
+	// Initialize Octave map with custom range
 	poOctMap = new GDALOctaveMap(octaveStart, octaveEnd);
 }
 
@@ -21,6 +21,13 @@ CPLErr GDALSimpleSURF::ConvertRGBToLuminosity(
 	{
 		CPLError(CE_Failure, CPLE_AppDefined,
 				"Raster bands are not specified");
+		return CE_Failure;
+	}
+
+	if (nXSize > red->GetXSize() || nYSize > red->GetYSize())
+	{
+		CPLError(CE_Failure, CPLE_AppDefined,
+						"Red band has less size than has been requested");
 		return CE_Failure;
 	}
 
@@ -50,14 +57,14 @@ CPLErr GDALSimpleSURF::ConvertRGBToLuminosity(
 	for (int row = 0; row < nHeight; row++)
 		for (int col = 0; col < nWidth; col++)
 		{
-			//Get RGB values
+			// Get RGB values
 			double dfRedVal = SRCVAL(paRedLayer, eRedType,
 					nWidth * row + col * dataRedSize);
 			double dfGreenVal = SRCVAL(paGreenLayer, eGreenType,
 					nWidth * row + col * dataGreenSize);
 			double dfBlueVal = SRCVAL(paBlueLayer, eBlueType,
 					nWidth * row + col * dataBlueSize);
-			//Compute luminosity value
+			// Compute luminosity value
 			padfImg[row][col] = (
 					dfRedVal * forRed +
 					dfGreenVal * forGreen +
@@ -121,7 +128,6 @@ void GDALSimpleSURF::NormalizeDistances(list<MatchedPointPairInfo> *poList)
 		if ((*i).euclideanDist > max)
 			max = (*i).euclideanDist;
 
-	// Normalize distances to one
 	if (max != 0)
 	{
 		for (i = poList->begin(); i != poList->end(); i++)
@@ -191,10 +197,13 @@ void GDALSimpleSURF::SetDescriptor(
 
 CPLErr GDALSimpleSURF::MatchFeaturePoints(
 		GDALMatchedPointsCollection *poMatched,
-		GDALFeaturePointsCollection *poCollect_1,
-		GDALFeaturePointsCollection *poCollect_2,
+		GDALFeaturePointsCollection *poFirstCollect,
+		GDALFeaturePointsCollection *poSecondCollect,
 		double dfThreshold)
 {
+/* -------------------------------------------------------------------- */
+/*      Validate parameters.                                            */
+/* -------------------------------------------------------------------- */
 	if (poMatched == NULL)
 	{
 		CPLError(CE_Failure, CPLE_AppDefined,
@@ -202,18 +211,21 @@ CPLErr GDALSimpleSURF::MatchFeaturePoints(
 		return CE_Failure;
 	}
 
-	if (poCollect_1 == NULL || poCollect_2 == NULL)
+	if (poFirstCollect == NULL || poSecondCollect == NULL)
 	{
 		CPLError(CE_Failure, CPLE_AppDefined,
 				"Feature point collections are not specified");
 		return CE_Failure;
 	}
 
+/* ==================================================================== */
+/*      Matching algorithm.                                             */
+/* ==================================================================== */
 	// Affects to false matching pruning
 	const double ratioThreshold = 0.8;
 
-	int len_1 = poCollect_1->GetSize();
-	int len_2 = poCollect_2->GetSize();
+	int len_1 = poFirstCollect->GetSize();
+	int len_2 = poSecondCollect->GetSize();
 
 	int minLength = (len_1 < len_2) ? len_1 : len_2;
 
@@ -226,8 +238,8 @@ CPLErr GDALSimpleSURF::MatchFeaturePoints(
 	// Assign p_1 - collection with minimal number of points
 	if (minLength == len_2)
 	{
-		p_1 = poCollect_2;
-		p_2 = poCollect_1;
+		p_1 = poSecondCollect;
+		p_2 = poFirstCollect;
 
 		int tmp = 0;
 		tmp = len_1;
@@ -238,21 +250,17 @@ CPLErr GDALSimpleSURF::MatchFeaturePoints(
 	else
 	{
 		// Assignment 'as is'
-		p_1 = poCollect_1;
-		p_2 = poCollect_2;
+		p_1 = poFirstCollect;
+		p_2 = poSecondCollect;
 		isSwap = false;
 	}
 
-	/*
-	 * Stores matched point indexes and
-	 * their euclidean distances
-	 */
+	// Stores matched point indexes and
+	// their euclidean distances
 	list<MatchedPointPairInfo> *poPairInfoList =
 			new list<MatchedPointPairInfo>();
 
-	/*
-	 * Flags that points in the 2nd collection are matched or not
-	 */
+	// Flags that points in the 2nd collection are matched or not
 	bool *alreadyMatched = new bool[len_2];
 	for (int i = 0; i < len_2; i++)
 		alreadyMatched[i] = false;
@@ -291,19 +299,19 @@ CPLErr GDALSimpleSURF::MatchFeaturePoints(
 						}
 					}
 
-					/*
-					 * Findes the 2nd nearest point
-					 */
+					// Findes the 2nd nearest point
 					if (bestDist_2 < 0)
 						bestDist_2 = curDist;
 					else
 						if (curDist > bestDist && curDist < bestDist_2)
 							bestDist_2 = curDist;
 				}
-		/*
-		 * FALSE DETECTION PRUNING
-		 * If ratio (1st / 2nd) > 0.8 - this is the false detection
-		 */
+/* -------------------------------------------------------------------- */
+/*	    False matching pruning.                                         */
+/* If ratio bestDist to bestDist_2 greater than 0.8 =>                  */
+/* 		consider as false detection.                                    */
+/* Otherwise, add points as matched pair.                               */
+/*----------------------------------------------------------------------*/
 		if (bestDist_2 > 0 && bestDist >= 0)
 			if (bestDist / bestDist_2 < ratioThreshold)
 			{
@@ -313,9 +321,13 @@ CPLErr GDALSimpleSURF::MatchFeaturePoints(
 			}
 	}
 
+
+/* -------------------------------------------------------------------- */
+/*      Pruning based on the provided threshold                         */
+/* -------------------------------------------------------------------- */
+
 	NormalizeDistances(poPairInfoList);
 
-	// Pruning based on the custom threshold (0..1)
 	list<MatchedPointPairInfo>::const_iterator iter;
 	for (iter = poPairInfoList->begin(); iter != poPairInfoList->end(); iter++)
 	{
