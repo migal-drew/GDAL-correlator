@@ -38,8 +38,6 @@ int main(int argc, char* argv[])
 
 	GDALMatchedPointsCollection *poMatched = new GDALMatchedPointsCollection();
 
-	GDALCorrelator *correlator = new GDALCorrelator();
-
 	int nOctStart = 2;
 	int nOctEnd = 2;
 	double dfSURFTreshold = 0.001;
@@ -49,12 +47,13 @@ int main(int argc, char* argv[])
 	for (int i = 0; i < 3; i++)
 		panBands[i] = i + 1;
 
-	correlator->GatherFeaturePoints(poDataset_1, panBands,
+	// Find feature points on both images
+	GatherFeaturePoints(poDataset_1, panBands,
 			poFPCollection_1, nOctStart, nOctEnd, dfSURFTreshold);
-	correlator->GatherFeaturePoints(poDataset_2, panBands,
+	GatherFeaturePoints(poDataset_2, panBands,
 			poFPCollection_2, nOctStart, nOctEnd, dfSURFTreshold);
-
-	correlator->MatchFeaturePoints(poMatched,
+	// Use found points to find correspondences
+	MatchFeaturePoints(poMatched,
 			poFPCollection_1, poFPCollection_2, dfMatchingThreshold);
 
 	/**
@@ -93,8 +92,6 @@ int main(int argc, char* argv[])
 	}
 	out.close();
 
-
-	delete correlator;
 	delete poDataset_1;
 	delete poDataset_2;
 	//delete poFPCollection_1;
