@@ -1,14 +1,11 @@
 /**
  * @file
- * @author  Andrew Migal migal.drew@gmail.com
+ * @author Andrew Migal migal.drew@gmail.com
+ * @brief Main demonstration function
  *
- * This program is free software
- *
- * This program is distributed in the hope that it will be useful, but
+ * This program is free software and
+ * is distributed in the hope that it will be useful, but
  * WITHOUT ANY WARRANTY
- *
- * This is the main function for demosnstration
- *
  */
 
 #include "gdal.h"
@@ -103,6 +100,15 @@ int main(int argc, char* argv[])
 		out << endl;
 	}
 	out.close();
+
+
+	GDALFeaturePoint *p = poFPCollection_1->GetPoint(0);
+	if (p != NULL)
+	{
+		for (int i = 0; i <= 64; i++)
+			printf("%d: %f \n", i + 1, (*p)[i]);
+	}
+
 
 	delete poDataset_1;
 	delete poDataset_2;

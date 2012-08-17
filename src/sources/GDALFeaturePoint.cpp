@@ -73,9 +73,15 @@ void GDALFeaturePoint::SetRadius(int nRadius) { this->nRadius = nRadius; }
 int  GDALFeaturePoint::GetSign() { return nSign; }
 void GDALFeaturePoint::SetSign(int nSign) { this->nSign = nSign; }
 
-double& GDALFeaturePoint::operator [] (int i)
+double& GDALFeaturePoint::operator [] (int nIndex)
 {
-	return padfDescriptor[i];
+	if (nIndex < 0 || nIndex >= DESC_SIZE)
+	{
+		CPLError(CE_Failure, CPLE_AppDefined,
+				"Descriptor index is out of range");
+	}
+
+	return padfDescriptor[nIndex];
 }
 
 GDALFeaturePoint::~GDALFeaturePoint() {
