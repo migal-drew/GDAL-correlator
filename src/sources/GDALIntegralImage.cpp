@@ -11,12 +11,7 @@ int GDALIntegralImage::GetHeight() { return nHeight; }
 
 int GDALIntegralImage::GetWidth() { return nWidth; }
 
-/**
- * Calculation of the integral image (summed area table)
- * padfImg - 2-dimensional array of grayscale image pixel values
- * height x width
- */
-void GDALIntegralImage::Initialize(double **padfImg, int nHeight, int nWidth)
+void GDALIntegralImage::Initialize(const double **padfImg, int nHeight, int nWidth)
 {
 	//Memory allocation
 	pMatrix = new double*[nHeight];
