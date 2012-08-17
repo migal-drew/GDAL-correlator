@@ -50,7 +50,7 @@ public:
 	GDALFeaturePoint& operator=(const GDALFeaturePoint& point);
 
 	/**
-	 * Provides access to point's descriptor.
+	 * Provide access to point's descriptor.
 	 *
 	 * @param nIndex Position of descriptor's value.
 	 * nIndex should be within range from 0 to DESC_SIZE (in current version - 64)

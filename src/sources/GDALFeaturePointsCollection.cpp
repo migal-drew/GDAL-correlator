@@ -12,6 +12,16 @@ GDALFeaturePointsCollection::GDALFeaturePointsCollection(GDALDataset* poDataset)
 	this->poDataset = poDataset;
 }
 
+GDALDataset* GDALFeaturePointsCollection::GetDataset()
+{
+	return poDataset;
+}
+
+void GDALFeaturePointsCollection::SetDataset(GDALDataset *poDataset)
+{
+	this->poDataset = poDataset;
+}
+
 void GDALFeaturePointsCollection::AddPoint(GDALFeaturePoint *poPoint)
 {
 	if (poPoint != NULL)
