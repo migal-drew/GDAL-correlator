@@ -109,12 +109,12 @@ void GDALSimpleSURF::ExtractFeaturePoints(GDALIntegralImage *poImg,
 }
 
 double GDALSimpleSURF::GetEuclideanDistance(
-		GDALFeaturePoint &poPoint_1, GDALFeaturePoint &poPoint_2)
+		GDALFeaturePoint &firstPoint, GDALFeaturePoint &secondPoint)
 {
 	double sum = 0;
 
 	for (int i = 0; i < GDALFeaturePoint::DESC_SIZE; i++)
-		sum += (poPoint_1[i] - poPoint_2[i]) * (poPoint_1[i] - poPoint_2[i]);
+		sum += (firstPoint[i] - secondPoint[i]) * (firstPoint[i] - secondPoint[i]);
 
 	return sqrt(sum);
 }

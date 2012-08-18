@@ -14,6 +14,7 @@
  * values in rectangular subarea. In more detail, for 2-dimensional array
  * of numbers this class provides capabilty to get sum of values in
  * rectangular arbitrary area with any size in constant time.
+ * Integral image is constructed from grayscale picture.
  */
 class GDALIntegralImage
 {
