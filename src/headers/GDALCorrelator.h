@@ -1,3 +1,16 @@
+/**
+ * @file
+ * @author Andrew Migal migal.drew@gmail.com
+ * @brief Algorithms for searching corresponding points on images.
+ * @details This implementation is  based on an simplified version
+ * of SURF algorithm (Speeded Up Robust Features).
+ * Provides capability for detection feature points
+ * and finding equal points on different images.
+ * As original, this realization is scale invariant, but sensitive to rotation.
+ * Images should have similar rotation angles (maximum difference is up to 10-15 degrees),
+ * otherwise algorithm produces incorrect and very unstable results.
+ */
+
 #ifndef GDALCORRELATOR_H_
 #define GDALCORRELATOR_H_
 
@@ -12,6 +25,27 @@
 #include "GDALSimpleSURF.h"
 #include "GDALIntegralImage.h"
 
+/**
+ * Detect feature points on provided image.
+ *
+ * @param poDataset Image on which feature points will be detected
+ * @param panBands Array of 3 raster bands numbers, for Red, Green, Blue bands (int that order)
+ * @param poCollection Feaure point collection where detected points will be stored
+ * @param nOctaveStart Number of bottom octave. Octave numbers starts from one.
+ * This value directly and strongly affects to amount of recognized points
+ * @param nOctaveEnd Number of top octave. Should be equal or greater than octaveStart
+ * @param dfThreshold Value from 0 to 1. Threshold for feature point recognition.
+ * Number of detected points is larger if threshold is higher
+ *
+ * @see GDALSimpleSURF class for detailed implementation.
+ *
+ * @note For example, for 640x480 images it's good to use octave numbers (bottom and top)
+ * 1 and 3, or 2 and 2.
+ * Be free to experiment with it, because character, robustness and number of points
+ * entirely depend on provided range of octaves and threshold.
+ * If method finds nothing, try to decrease octaveStart number or (and) threshold.
+ * Conversely, if too many feature points, try to slightly increase threshold.
+ */
 CPLErr GatherFeaturePoints(GDALDataset* poDataset, int* panBands,
 			GDALFeaturePointsCollection* poCollection,
 			int nOctaveStart, int nOctaveEnd, double dfThreshold)
@@ -89,6 +123,18 @@ CPLErr GatherFeaturePoints(GDALDataset* poDataset, int* panBands,
 	return CE_None;
 }
 
+/**
+ * Find corresponding points (equal points in two collections).
+ *
+ * @param poMatched Resulting collection for matched points
+ * @param poFirstCollection Points on the first image
+ * @param poSecondCollection Points on the second image
+ * @param dfThreshold Value from 0 to 1. Threshold affects to number of
+ * matched points. If threshold is lower than amount of corresponding
+ * points is larger, and vice versa
+ *
+ * @note This method invokes function from GDALSimpleSURF class.
+ */
 CPLErr MatchFeaturePoints(
 			GDALMatchedPointsCollection* poMatched,
 			GDALFeaturePointsCollection* poFirstCollection,
