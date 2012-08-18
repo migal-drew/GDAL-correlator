@@ -101,15 +101,6 @@ int main(int argc, char* argv[])
 	}
 	out.close();
 
-
-	GDALFeaturePoint *p = poFPCollection_1->GetPoint(0);
-	if (p != NULL)
-	{
-		for (int i = 0; i <= 64; i++)
-			printf("%d: %f \n", i + 1, (*p)[i]);
-	}
-
-
 	delete poDataset_1;
 	delete poDataset_2;
 	delete poFPCollection_1;

@@ -7,23 +7,24 @@ GDALMatchedPointsCollection::GDALMatchedPointsCollection()
 }
 
 void GDALMatchedPointsCollection::AddPoints(
-		GDALFeaturePoint *poPoint_1, GDALFeaturePoint *poPoint_2)
+		GDALFeaturePoint *poFirstPoint, GDALFeaturePoint *poSecondPoint)
 {
-	poCollect_1->AddPoint(poPoint_1);
-	poCollect_2->AddPoint(poPoint_2);
+	poCollect_1->AddPoint(poFirstPoint);
+	poCollect_2->AddPoint(poSecondPoint);
 }
 
 void GDALMatchedPointsCollection::GetPoints(
-		int nIndex, GDALFeaturePoint *poPoint_1, GDALFeaturePoint *poPoint_2)
+		int nIndex, GDALFeaturePoint *poFirstPoint, GDALFeaturePoint *poSecondPoint)
 {
 	int size = this->GetSize();
 
-	if (poPoint_1 == NULL || poPoint_2 == NULL || nIndex < 0 || nIndex >= size)
+	if (poFirstPoint == NULL || poSecondPoint == NULL ||
+			nIndex < 0 || nIndex >= size)
 		return;
 
 	// Copy points
-	*poPoint_1 = *(poCollect_1->GetPoint(nIndex));
-	*poPoint_2 = *(poCollect_2->GetPoint(nIndex));
+	*poFirstPoint = *(poCollect_1->GetPoint(nIndex));
+	*poSecondPoint = *(poCollect_2->GetPoint(nIndex));
 }
 
 int GDALMatchedPointsCollection::GetSize() const

@@ -1,6 +1,7 @@
 /**
  * @file
  * @author Andrew Migal migal.drew@gmail.com
+ * @brief Integral image class (summed area table).
  */
 
 #ifndef GDALINTEGRALIMAGE_H_
