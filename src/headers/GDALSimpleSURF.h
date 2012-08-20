@@ -90,6 +90,18 @@ public:
 	 * @param nOctaveStart Number of bottom octave. Octave numbers starts with one
 	 * @param nOctaveEnd Number of top octave. Should be equal or greater than OctaveStart
 	 *
+	 * @note
+	 * Every octave finds points with specific size. For small images
+	 * use small octave numbers, for high resolution - large.
+	 * For 1024x1024 images it's normal to use any octave numbers from range 1-6.
+	 * (for example, octave start - 1, octave end - 3, or octave start - 2, octave end - 2.)
+	 * For larger images, try 1-10 range or even higher.
+	 * Pay attention that number of detected point decreases quickly per octave
+	 * for particular image. Algorithm finds more points in case of small octave numbers.
+	 * If method detects nothing, reduce bottom bound of octave range.
+	 *
+	 * NOTICE that every octave requires time to compute. Use a little range
+	 * or only one octave if execution time is significant.
 	 */
 	GDALSimpleSURF(int nOctaveStart, int nOctaveEnd);
 	virtual ~GDALSimpleSURF();
@@ -124,6 +136,13 @@ public:
 	 * @param poCollection Collection for storage detected feature points
 	 * @param dfThreshold Threshold for feature point recognition. Detected feature point
 	 * will have Hessian value greater than this provided threshold.
+	 *
+	 * @note Typical threshold's value is 0,001. But this value
+	 * can be various in each case and depends on image's nature.
+	 * For example, value can be 0.002 or 0.005.
+	 * Fill free to experiment with it.
+	 * If threshold is high, than number of detected feature points is small,
+	 * and vice versa.
 	 */
 	void ExtractFeaturePoints(GDALIntegralImage *poImg,
 			GDALFeaturePointsCollection *poCollection, double dfThreshold);
@@ -135,7 +154,7 @@ public:
 	 * @param poFirstCollection Points on the first image
 	 * @param poSecondCollection Points on the second image
 	 * @param dfThreshold Value from 0 to 1. Threshold affects to number of
-	 * matched points. If threshold is lower than amount of corresponding
+	 * matched points. If threshold is lower, amount of corresponding
 	 * points is larger, and vice versa
 	 *
 	 * @return CE_None or CE_Failure if error occurs.

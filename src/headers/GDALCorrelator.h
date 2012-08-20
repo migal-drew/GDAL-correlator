@@ -53,25 +53,43 @@
 #include "GDALIntegralImage.h"
 
 /**
- * Detect feature points on provided image.
+ * Detect feature points on provided image. Please carefully read documentation below.
  *
  * @param poDataset Image on which feature points will be detected
- * @param panBands Array of 3 raster bands numbers, for Red, Green, Blue bands (int that order)
+ * @param panBands Array of 3 raster bands numbers, for Red, Green, Blue bands (in that order)
  * @param poCollection Feaure point collection where detected points will be stored
  * @param nOctaveStart Number of bottom octave. Octave numbers starts from one.
  * This value directly and strongly affects to amount of recognized points
  * @param nOctaveEnd Number of top octave. Should be equal or greater than octaveStart
  * @param dfThreshold Value from 0 to 1. Threshold for feature point recognition.
- * Number of detected points is larger if threshold is higher
+ * Number of detected points is larger if threshold is lower
  *
- * @see GDALSimpleSURF class for detailed implementation.
+ * @see GDALFeaturePoint, GDALSimpleSURF class for detailes.
  *
- * @note For example, for 640x480 images it's good to use octave numbers (bottom and top)
- * 1 and 3, or 2 and 2.
- * Be free to experiment with it, because character, robustness and number of points
+ * @note Every octave finds points in specific size. For small images
+ * use small octave numbers, for high resolution - large.
+ * For 1024x1024 images it's normal to use any octave numbers from range 1-6.
+ * (for example, octave start - 1, octave end - 3, or octave start - 2, octave end - 2.)
+ * For larger images, try 1-10 range or even higher.
+ * Pay attention that number of detected point decreases quickly per octave
+ * for particular image. Algorithm finds more points in case of small octave number.
+ * If method detects nothing, reduce octave start value.
+ * In addition, if many feature points are required (the largest possible amount),
+ * use the lowest octave start value (1) and wide octave range.
+ *
+ * @note Typical threshold's value is 0,001. It's pretty good for all images.
+ * But this value depends on image's nature and may be various in each particular case.
+ * For example, value can be 0,002 or 0,005.
+ * Notice that number of detected points is larger if threshold is lower.
+ * But with high threshold feature points will be better - "stronger", more "unique" and distinctive.
+ *
+ * Feel free to experiment with parameters, because character, robustness and number of points
  * entirely depend on provided range of octaves and threshold.
- * If method finds nothing, try to decrease octaveStart number or (and) threshold.
- * Conversely, if too many feature points, try to slightly increase threshold.
+ *
+ * NOTICE that every octave requires time to compute. Use a little range
+ * or only one octave, if execution time is significant.
+ *
+ * @return CE_None or CE_Failure if error occurs.
  */
 CPLErr GatherFeaturePoints(GDALDataset* poDataset, int* panBands,
 			GDALFeaturePointsCollection* poCollection,
@@ -97,7 +115,7 @@ CPLErr GatherFeaturePoints(GDALDataset* poDataset, int* panBands,
 		return CE_Failure;
 	}
 
-	if (nOctaveStart < 0 || nOctaveEnd < 0 ||
+	if (nOctaveStart <= 0 || nOctaveEnd < 0 ||
 			nOctaveStart > nOctaveEnd)
 	{
 		CPLError(CE_Failure, CPLE_AppDefined,
@@ -157,10 +175,18 @@ CPLErr GatherFeaturePoints(GDALDataset* poDataset, int* panBands,
  * @param poFirstCollection Points on the first image
  * @param poSecondCollection Points on the second image
  * @param dfThreshold Value from 0 to 1. Threshold affects to number of
- * matched points. If threshold is lower than amount of corresponding
+ * matched points. If threshold is higher, amount of corresponding
  * points is larger, and vice versa
  *
- * @note This method invokes function from GDALSimpleSURF class.
+ * @note Typical threshold's value is 0,1. BUT it's a very approximate guide.
+ * It can be 0,001 or even 1. This threshold provides direct adjustment
+ * of point matching.
+ * NOTICE that if threshold is lower, matches are more robust and correct, but number of
+ * matched points is smaller. Therefore if algorithm performs many false
+ * detections and produces bad results, reduce threshold.
+ * Otherwise, if algorithm finds nothing, increase threshold.
+ *
+ * @return CE_None or CE_Failure if error occurs.
  */
 CPLErr MatchFeaturePoints(
 			GDALMatchedPointsCollection* poMatched,
