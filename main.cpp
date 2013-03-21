@@ -28,18 +28,29 @@ using namespace std;
  */
 int main(int argc, char* argv[])
 {
+	const char* USAGE = "Usage: filename, filename, lowest octave, highest octave\n";
+
     GDALAllRegister();
 
     GDALDataset  *poDataset_1;
     GDALDataset  *poDataset_2;
 
-    poDataset_1 = (GDALDataset *) GDALOpen(
-    		"/home/andrew/workspace/GDAL-correlator/Debug/1.jpg", GA_ReadOnly );
+    if (argc < 5)
+    {
+    	printf("Parameters are missing!\n");
+    	printf(USAGE);
+    	return -1;
+    }
+
+    //poDataset_1 = (GDALDataset *) GDALOpen(
+    //		"/home/andrew/workspace/GDAL-correlator/Debug/1.jpg", GA_ReadOnly );
+    poDataset_1 = (GDALDataset *) GDALOpen(argv[1], GA_ReadOnly );
 	if( poDataset_1 == NULL )
        return 0;
 
-	poDataset_2 = (GDALDataset *) GDALOpen(
-			"/home/andrew/workspace/GDAL-correlator/Debug/2.jpg", GA_ReadOnly );
+	//poDataset_2 = (GDALDataset *) GDALOpen(
+	//		"/home/andrew/workspace/GDAL-correlator/Debug/2.jpg", GA_ReadOnly );
+	poDataset_2 = (GDALDataset *) GDALOpen(argv[2], GA_ReadOnly );
 	if( poDataset_2 == NULL )
 		return 0;
 
@@ -50,28 +61,38 @@ int main(int argc, char* argv[])
 
 	GDALMatchedPointsCollection *poMatched = new GDALMatchedPointsCollection();
 
-	int nOctStart = 2;
-	int nOctEnd = 2;
+	int nOctStart = atoi(argv[3]);
+    int nOctEnd = atoi(argv[4]);
 	double dfSURFTreshold = 0.001;
 	double dfMatchingThreshold = 0.015;
+
+    printf("Initial octave %d\n", nOctStart);
+    printf("Ending octave %d\n", nOctEnd);
 
 	int* panBands = new int[3];
 	for (int i = 0; i < 3; i++)
 		panBands[i] = i + 1;
 
 	// Find feature points on both images
+    printf("Finding feature points on 1 image... ");
 	GatherFeaturePoints(poDataset_1, panBands,
 			poFPCollection_1, nOctStart, nOctEnd, dfSURFTreshold);
+	printf("Found: %d points \n", poFPCollection_1->GetSize());
+    printf("Finding feature points on 2 image... ");
 	GatherFeaturePoints(poDataset_2, panBands,
 			poFPCollection_2, nOctStart, nOctEnd, dfSURFTreshold);
+	printf("Found: %d points \n", poFPCollection_2->GetSize());
 	// Use gathered points to find correspondences
+    printf("Matching... ");
 	MatchFeaturePoints(poMatched,
 			poFPCollection_1, poFPCollection_2, dfMatchingThreshold);
+	printf("Pairs found: %d \n", poMatched->GetSize());
 
 /* -------------------------------------------------------------------- */
 /*      Printing parameters for demonstration                           */
 /* -------------------------------------------------------------------- */
 	ofstream out;
+    printf("Writing results...\n");   
 
 	out.open("points_1.txt");
 	for (int i = 0; i < poFPCollection_1->GetSize(); i++)
@@ -94,9 +115,9 @@ int main(int argc, char* argv[])
 	{
 		poMatched->GetPoints(i, point_1, point_2);
 
-		out << point_1->GetX() << ", " << point_1->GetY();
-		out << " | ";
-		out << point_2->GetX() << ", " << point_2->GetY();
+		out << point_1->GetX() << " " << point_1->GetY();
+		out << " ";
+		out << point_2->GetX() << " " << point_2->GetY();
 		out << endl;
 	}
 	out.close();

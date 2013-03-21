@@ -35,7 +35,9 @@
 #define GDALOCTAVELAYER_H_
 
 #include "GDALIntegralImage.h"
+
 #include <math.h>
+#include "gdal.h"
 
 /**
  * @author Andrew Migal migal.drew@gmail.com

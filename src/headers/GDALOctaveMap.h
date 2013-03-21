@@ -102,6 +102,13 @@ public:
 	 * Number of top octave. Should be equal or greater than OctaveStart
 	 */
 	int octaveEnd;
+
+	/**
+	 * Helper method. Copies pointers to common data from one OctaveLayer to another.
+	 * (in general, Hessian values and their signs)
+	 */
+private:
+	void CopyCommonData(GDALOctaveLayer *source, GDALOctaveLayer *destination);
 };
 
 #endif /* GDALOCTAVEMAP_H_ */

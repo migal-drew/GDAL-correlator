@@ -5,7 +5,7 @@ GDALOctaveLayer::GDALOctaveLayer(int nOctave, int nInterval)
 	this->octaveNum = nOctave;
 	this->filterSize = 3 * ((int)pow(2, nOctave) * nInterval + 1);
 	this->radius = (this->filterSize - 1) / 2;
-	this->scale = (int)pow(2, nOctave);
+	this->scale = (int)pow(2, nOctave);   //!! this depends entirely on octave number.
 	this->width = 0;
 	this->height = 0;
 
@@ -65,11 +65,12 @@ void GDALOctaveLayer::ComputeLayer(GDALIntegralImage *poImg)
 
 GDALOctaveLayer::~GDALOctaveLayer()
 {
-	for (int i = 0; i < height; i++)
-	{
-		delete[] detHessians[i];
-		delete[] signs[i];
-	}
+	if (detHessians != NULL && signs != NULL)
+		for (int i = 0; i < height; i++)
+		{
+			delete[] detHessians[i];
+			delete[] signs[i];
+		}
 
 	delete[] detHessians;
 	delete[] signs;
